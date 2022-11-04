@@ -269,6 +269,12 @@ func startupCommand(
 		`else (halt Permissions!); fi ||`,
 		`halt "$(permissions "${postgres_data_directory}" ||:)"`,
 
+		// Patroni will complain if there's no `postgresql.conf` file
+		// and PGDATA may be missing that file if this is a restored database
+		// where the conf file was kept elsewhere.
+		`[[ ! -f "${postgres_data_directory}/postgresql.conf" ]] &&`,
+		`touch "${postgres_data_directory}/postgresql.conf"`,
+
 		// Create the pgBackRest log directory.
 		`results 'pgBackRest log directory' "${pgbrLog_directory}"`,
 		`install --directory --mode=0775 "${pgbrLog_directory}" ||`,

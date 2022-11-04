@@ -218,6 +218,13 @@ check-kuttl:
 	${PGO_KUBE_CLIENT} ${KUTTL_TEST} \
 		--config testing/kuttl/kuttl-test.yaml
 
+# Expects operator to be running
+# For GKE-only test cases
+.PHONY: check-kuttl-gke
+check-kuttl-gke:
+	${PGO_KUBE_CLIENT} ${KUTTL_TEST} \
+		--config testing/kuttl/kuttl-test-gke.yaml
+
 .PHONY: generate-kuttl
 generate-kuttl: export KUTTL_PG_VERSION ?= 14
 generate-kuttl: export KUTTL_POSTGIS_VERSION ?= 3.1
@@ -231,7 +238,7 @@ generate-kuttl:
 		source="$${1}" target="$${1/e2e/e2e-generated}"; \
 		mkdir -p "$${target%/*}"; render < "$${source}" > "$${target}"; \
 		shift; \
-	done' - testing/kuttl/e2e/*/*.yaml testing/kuttl/e2e-other/*/*.yaml
+	done' - testing/kuttl/e2e/*/*.yaml testing/kuttl/e2e-other/*/*.yaml testing/kuttl/e2e-other-gke/*/*.yaml
 
 .PHONY: check-generate
 check-generate: generate-crd generate-deepcopy generate-rbac
