@@ -225,6 +225,8 @@ check-kuttl-gke:
 	${PGO_KUBE_CLIENT} ${KUTTL_TEST} \
 		--config testing/kuttl/kuttl-test-gke.yaml
 
+KUTTL_NONCRUNCHY_PSQL_IMAGE ?= 14.5.0-debian-11-r37
+
 .PHONY: generate-kuttl
 generate-kuttl: export KUTTL_PG_VERSION ?= 14
 generate-kuttl: export KUTTL_POSTGIS_VERSION ?= 3.1
@@ -233,7 +235,14 @@ generate-kuttl:
 	[ ! -d testing/kuttl/e2e-generated ] || rm -r testing/kuttl/e2e-generated
 	[ ! -d testing/kuttl/e2e-generated-other ] || rm -r testing/kuttl/e2e-generated-other
 	bash -ceu ' \
-	render() { envsubst '"'"'$$KUTTL_PG_VERSION $$KUTTL_POSTGIS_VERSION $$KUTTL_PSQL_IMAGE'"'"'; }; \
+	case $(KUTTL_PG_VERSION) in \
+	15 ) export KUTTL_NONCRUNCHY_PSQL_IMAGE=15.0.0-debian-11-r4 ;; \
+	14 ) export KUTTL_NONCRUNCHY_PSQL_IMAGE=14.5.0-debian-11-r37 ;; \
+	13 ) export KUTTL_NONCRUNCHY_PSQL_IMAGE=13.8.0-debian-11-r39 ;; \
+	12 ) export KUTTL_NONCRUNCHY_PSQL_IMAGE=12.12.0-debian-11-r40 ;; \
+	11 ) export KUTTL_NONCRUNCHY_PSQL_IMAGE=11.17.0-debian-11-r39 ;; \
+	esac; \
+	render() { envsubst '"'"'$$KUTTL_PG_VERSION $$KUTTL_POSTGIS_VERSION $$KUTTL_PSQL_IMAGE $$KUTTL_NONCRUNCHY_PSQL_IMAGE'"'"'; }; \
 	while [ $$# -gt 0 ]; do \
 		source="$${1}" target="$${1/e2e/e2e-generated}"; \
 		mkdir -p "$${target%/*}"; render < "$${source}" > "$${target}"; \

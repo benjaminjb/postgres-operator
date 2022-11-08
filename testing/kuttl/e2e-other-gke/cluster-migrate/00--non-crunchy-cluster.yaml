@@ -106,7 +106,7 @@ spec:
       hostIPC: false
       containers:
         - name: postgresql
-          image: docker.io/bitnami/postgresql:14.5.0-debian-11-r37
+          image: docker.io/bitnami/postgresql:${KUTTL_NONCRUNCHY_PSQL_IMAGE}
           imagePullPolicy: "IfNotPresent"
           securityContext:
             runAsUser: 1001

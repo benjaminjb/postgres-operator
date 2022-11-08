@@ -236,8 +236,6 @@ initContainers:
     recreate "${postgres_data_directory}" '0700'
     else (halt Permissions!); fi ||
     halt "$(permissions "${postgres_data_directory}" ||:)"
-    [[ ! -f "${postgres_data_directory}/postgresql.conf" ]] &&
-    touch "${postgres_data_directory}/postgresql.conf"
     results 'pgBackRest log directory' "${pgbrLog_directory}"
     install --directory --mode=0775 "${pgbrLog_directory}" ||
     halt "$(permissions "${pgbrLog_directory}" ||:)"
@@ -246,6 +244,8 @@ initContainers:
     results 'data version' "${postgres_data_version:=$(< "${postgres_data_directory}/PG_VERSION")}"
     [[ "${postgres_data_version}" == "${expected_major_version}" ]] ||
     halt Expected PostgreSQL data version "${expected_major_version}"
+    [[ ! -f "${postgres_data_directory}/postgresql.conf" ]] &&
+    touch "${postgres_data_directory}/postgresql.conf"
     safelink "${pgwal_directory}" "${postgres_data_directory}/pg_wal"
     results 'wal directory' "$(realpath "${postgres_data_directory}/pg_wal")"
     rm -f "${postgres_data_directory}/recovery.signal"
