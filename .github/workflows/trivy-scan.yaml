@@ -24,7 +24,7 @@ jobs:
         with:
           scan-type: fs
           hide-progress: true
-          exit-code: 1
+          # exit-code: 1
 
       # Upload actionable results to the GitHub Security tab.
       # Pull request checks fail according to repository settings.
