@@ -11,12 +11,12 @@ on:
       - master
   # cron scan is same as codeql-analysis job
   schedule:
-    - cron: '10 18 * * 2'
+    - cron: '* 11 * * *'
 
 jobs:
   scan:
     if: ${{ github.repository == 'CrunchyData/postgres-operator' }}
-    
+
     permissions:
       # for github/codeql-action/upload-sarif to upload SARIF results
       security-events: write 
@@ -26,6 +26,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Run trivy and log detected and fixed vulnerabilities
+      # This report should match the uploaded code scan report below
+      # and is a convenience/redundant effort for those who prefer to
+      # read logs and/or if anything goes wrong with the upload.
+      - name: Log all detected vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          hide-progress: true
+          ignore-unfixed: true
+      
       # Upload actionable results to the GitHub Security tab.
       # Pull request checks fail according to repository settings.
       # - https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github
@@ -42,10 +53,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
-
-      - name: Log all detected vulnerabilities and error out
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          hide-progress: true
-          exit-code: 1
