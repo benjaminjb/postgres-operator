@@ -11,11 +11,12 @@ on:
       - master
   # cron scan is same as codeql-analysis job
   schedule:
-    - cron: '55 * * * *'
+    - cron: '10 18 * * 2'
 
 jobs:
   scan:
-    
+    if: ${{ github.repository == 'CrunchyData/postgres-operator' }}
+
     permissions:
       # for github/codeql-action/upload-sarif to upload SARIF results
       security-events: write 
