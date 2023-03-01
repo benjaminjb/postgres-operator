@@ -15,10 +15,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run a microshift cluster
         run: |
-          sudo subscription-manager repos \
-            --enable rhocp-4.12-for-rhel-8-$(uname -i)-rpms \
-            --enable fast-datapath-for-rhel-8-$(uname -i)-rpms
-          
-          sudo dnf install -y microshift
+          sudo apt-get install -y microshift
 
           microshift version
