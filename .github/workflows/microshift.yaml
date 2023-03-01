@@ -49,3 +49,5 @@ jobs:
           sleep 10
           kubectl wait --for=condition=available apiservice --all --timeout 300s
           kubectl api-resources
+
+      - run: make check-envtest-existing
