@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/crunchydata/postgres-operator/internal/config"
 	"github.com/crunchydata/postgres-operator/internal/initialize"
 	"github.com/crunchydata/postgres-operator/internal/logging"
 	"github.com/crunchydata/postgres-operator/internal/naming"
@@ -337,7 +336,7 @@ func (r *Reconciler) reconcilePGAdminStatefulSet(
 	// add nss_wrapper init container and add nss_wrapper env vars to the pgAdmin
 	// container
 	addNSSWrapper(
-		config.PGAdminContainerImage(cluster),
+		"registry.developers.crunchydata.com/crunchydata/crunchy-pgadmin4:ubi8-4.30-17", // config.PGAdminContainerImage(cluster),
 		cluster.Spec.ImagePullPolicy,
 		&sts.Spec.Template)
 

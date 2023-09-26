@@ -48,7 +48,7 @@ const (
 	// upcoming enhancement work.
 
 	// initial pgAdmin login email address
-	loginEmail = "admin"
+	// loginEmail = "admin"
 
 	// initial pgAdmin login password
 	loginPassword = "admin"
@@ -179,6 +179,29 @@ func systemSettings(spec *v1beta1.PGAdminPodSpec) map[string]interface{} {
 	// SERVER_MODE must always be enabled when running on a webserver.
 	// - https://github.com/pgadmin-org/pgadmin4/blob/REL-4_30/web/config.py#L105
 	settings["SERVER_MODE"] = true
+
+	// pgAdmin4 should be accessible publicly
+	settings["DEFAULT_SERVER"] = "0.0.0.0"
+
+	// this is the default pgAdmin4 port, but this is left here for someone who wants
+	// to override the default port
+	settings["DEFAULT_SERVER_PORT"] = pgAdminPort
+
+	// this is the path to the local pgadmin4 database; this is part of the persisted
+	// volume
+	settings["SQLITE_PATH"] = "/var/lib/pgadmin/pgadmin4.db"
+
+	// this is the path to the local pgadmin4 sessions database; this is part of the
+	// persisted volume
+	settings["SESSION_DB_PATH"] = "/var/lib/pgadmin/sessions"
+
+	// this is the path to the local pgadmin4 storage; this is part of the persisted
+	// volume
+	settings["STORAGE_DIR"] = "/var/lib/pgadmin/storage"
+
+	// this allows for the default PostgreSQL binary path to be overwritten with the
+	// directory that is in the container
+	settings["DEFAULT_BINARY_PATHS"] = "{ \"pg\": \"\",}"
 
 	return settings
 }
