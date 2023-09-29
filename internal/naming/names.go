@@ -219,6 +219,14 @@ func ClusterPGAdmin(cluster *v1beta1.PostgresCluster) metav1.ObjectMeta {
 	}
 }
 
+// ClusterPGAdminClusters returns the ObjectMeta necessary to lookup the ConfigMap...
+func ClusterPGAdminClusters(pgAdmin *v1beta1.PGAdmin) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Namespace: pgAdmin.Namespace,
+		Name:      pgAdmin.Name + "-pgadmin-clusters",
+	}
+}
+
 // ClusterPGBouncer returns the ObjectMeta necessary to lookup the ConfigMap,
 // Deployment, Secret, PodDisruptionBudget or Service that is cluster's
 // PgBouncer proxy.

@@ -61,6 +61,9 @@ type PGAdminSpec struct {
 	// More info: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration
 	// +optional
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+
+	// The selector for postgresclusters to be managed
+	PostgresClusters []string `json:"postgresclusters,omitempty"`
 }
 
 // PGAdminStatus defines the observed state of PGAdmin

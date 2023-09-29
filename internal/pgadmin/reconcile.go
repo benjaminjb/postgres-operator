@@ -194,13 +194,24 @@ func Pod(
 		},
 	}
 
-	// configVolumeMount := corev1.VolumeMount{
-	// 	Name: "pgadmin-config", MountPath: configMountPath, ReadOnly: true,
-	// }
-	// configVolume := corev1.Volume{Name: configVolumeMount.Name}
-	// configVolume.Projected = &corev1.ProjectedVolumeSource{
-	// 	Sources: podConfigFiles(inConfigMap, *inCluster.Spec.UserInterface.PGAdmin),
-	// }
+	configVolumeMount := corev1.VolumeMount{
+		Name: "pgadmin-config", MountPath: configMountPath, ReadOnly: true,
+	}
+	configVolume := corev1.Volume{Name: configVolumeMount.Name}
+	configVolume.Projected = &corev1.ProjectedVolumeSource{
+		Sources: podConfigFiles(inConfigMap, *inCluster.Spec.UserInterface.PGAdmin),
+	}
+
+	clusterVolumeMount := corev1.VolumeMount{
+		Name: "pgadmin-cluster", MountPath: clusterMountPath, ReadOnly: true,
+	}
+	clusterVolume := corev1.Volume{Name: clusterVolumeMount.Name}
+	clusterVolume.ConfigMap = &corev1.ConfigMapVolumeSource{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: "pgadmin-pgadmin-clusters",
+			// Name: naming.ClusterPGAdminClusters(pgAdmin).Name,
+		},
+	}
 
 	// startupVolumeMount := corev1.VolumeMount{
 	// 	Name: "pgadmin-startup", MountPath: startupMountPath, ReadOnly: true,
@@ -226,6 +237,14 @@ func Pod(
 			},
 			{
 				Name:  "PGADMIN_DEFAULT_PASSWORD",
+				Value: loginPassword,
+			},
+			{
+				Name:  "PGADMIN_SETUP_EMAIL",
+				Value: "admin@example.com",
+			},
+			{
+				Name:  "PGADMIN_SETUP_PASSWORD",
 				Value: loginPassword,
 			},
 			{
@@ -260,7 +279,7 @@ func Pod(
 		}},
 		VolumeMounts: []corev1.VolumeMount{
 			// startupVolumeMount,
-			// configVolumeMount,
+			configVolumeMount,
 			{
 				Name:      tmpVolume,
 				MountPath: runMountPath,
@@ -272,6 +291,10 @@ func Pod(
 			{
 				Name:      dataVolume,
 				MountPath: dataMountPath,
+			},
+			{
+				Name:      "pgadmin-cluster",
+				MountPath: clusterMountPath,
 			},
 		},
 		// ReadinessProbe: &corev1.Probe{
@@ -315,8 +338,10 @@ func Pod(
 	// add all volumes other than 'tmp' as that is added later
 	// outPod.Volumes = []corev1.Volume{pgAdminLog, pgAdminData, configVolume, startupVolume}
 	outPod.Volumes = []corev1.Volume{
+		configVolume,
 		pgAdminLog,
 		pgAdminData,
+		clusterVolume,
 	}
 
 	outPod.Containers = []corev1.Container{container}

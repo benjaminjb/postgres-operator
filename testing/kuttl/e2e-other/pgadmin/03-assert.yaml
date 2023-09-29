@@ -1,0 +1,8 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+# First, check that all containers in the instance pod are ready
+# Then, list the query files mounted to the exporter and check for expected files
+# Then, check the contents of the queries to ensure queries.yml was generated correctly
+# Finally, store the current exporter pid as an annotation
+- script: |

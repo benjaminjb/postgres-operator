@@ -891,6 +891,11 @@ spec:
                       type: string
                     type: object
                 type: object
+              postgresclusters:
+                description: The selector for postgresclusters to be managed
+                items:
+                  type: string
+                type: array
               priorityClassName:
                 description: 'Priority class name for the PGAdmin pod. Changing this
                   value causes PGAdmin pod to restart. More info: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/'

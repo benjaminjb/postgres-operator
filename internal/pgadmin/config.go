@@ -57,7 +57,8 @@ const (
 	pgAdminPort = 5050
 
 	// configMountPath is where to mount configuration files, secrets, etc.
-	configMountPath = "/etc/pgadmin/conf.d"
+	configMountPath  = "/etc/pgadmin/conf.d"
+	clusterMountPath = "/etc/pgadmin/clusters"
 
 	settingsAbsolutePath   = configMountPath + "/" + settingsProjectionPath
 	settingsConfigMapKey   = "pgadmin-settings.json"
