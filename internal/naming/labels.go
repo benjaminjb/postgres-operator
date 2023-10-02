@@ -91,6 +91,9 @@ const (
 	// LabelStartupInstance is used to indicate the startup instance associated with a resource
 	LabelStartupInstance = labelPrefix + "startup-instance"
 
+	// LabelPGAdmin provides the fundamental label for pgAdmin instances
+	LabelPGAdmin = labelPrefix + "pgadmin"
+
 	RolePrimary = "primary"
 	RoleReplica = "replica"
 

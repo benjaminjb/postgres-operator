@@ -219,8 +219,17 @@ func ClusterPGAdmin(cluster *v1beta1.PostgresCluster) metav1.ObjectMeta {
 	}
 }
 
-// ClusterPGAdminClusters returns the ObjectMeta necessary to lookup the ConfigMap...
-func ClusterPGAdminClusters(pgAdmin *v1beta1.PGAdmin) metav1.ObjectMeta {
+// StandalonePGAdmin returns the ObjectMeta necessary to lookup the ConfigMap,
+// Service, StatefulSet, or Volume for the cluster's pgAdmin user interface.
+func StandalonePGAdmin(pgadmin *v1beta1.PGAdmin) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Namespace: pgadmin.Namespace,
+		Name:      pgadmin.Name + "-pgadmin",
+	}
+}
+
+// StandalonePGAdminClusters returns the ObjectMeta necessary to lookup the ConfigMap...
+func StandalonePGAdminClusters(pgAdmin *v1beta1.PGAdmin) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Namespace: pgAdmin.Namespace,
 		Name:      pgAdmin.Name + "-pgadmin-clusters",

@@ -62,8 +62,28 @@ type PGAdminSpec struct {
 	// +optional
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 
-	// The selector for postgresclusters to be managed
-	PostgresClusters []string `json:"postgresclusters,omitempty"`
+	// AdminUsername is the username to set during pgAdmin startup
+	// +optional
+	AdminUsername string `json:"adminUsername"`
+
+	// ServerGroups for importing PostgresClusters to pgAdmin
+	// +optional
+	ServerGroups []ServerGroup `json:"serverGroups"`
+}
+
+// Default defines several key default values for a pgAdmin instance.
+func (s *PGAdminSpec) Default() {
+	if s.AdminUsername == "" {
+		s.AdminUsername = "admin@pgo"
+	}
+}
+
+type ServerGroup struct {
+	// The name for the ServerGroup in pgAdmin
+	Name string `json:"name"`
+
+	// PostgresClusterSelector selects clusters to dynamically add to pgAdmin by matching labels
+	PostgresClusterSelector metav1.LabelSelector `json:"postgresClusterSelector"`
 }
 
 // PGAdminStatus defines the observed state of PGAdmin
@@ -82,6 +102,19 @@ type PGAdmin struct {
 
 	Spec   PGAdminSpec   `json:"spec,omitempty"`
 	Status PGAdminStatus `json:"status,omitempty"`
+}
+
+// Default implements "sigs.k8s.io/controller-runtime/pkg/webhook.Defaulter" so
+// a webhook can be registered for the type.
+// - https://book.kubebuilder.io/reference/webhook-overview.html
+func (p *PGAdmin) Default() {
+	if len(p.APIVersion) == 0 {
+		p.APIVersion = GroupVersion.String()
+	}
+	if len(p.Kind) == 0 {
+		p.Kind = "PGAdmin"
+	}
+	p.Spec.Default()
 }
 
 //+kubebuilder:object:root=true
