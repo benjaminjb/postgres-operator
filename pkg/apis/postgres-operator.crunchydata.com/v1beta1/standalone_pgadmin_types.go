@@ -79,7 +79,8 @@ func (s *PGAdminSpec) Default() {
 }
 
 type ServerGroup struct {
-	// The name for the ServerGroup in pgAdmin
+	// The name for the ServerGroup in pgAdmin.
+	// Must be unique in the pgAdmin's ServerGroups since it becomes the ServerGroup name in pgAdmin.
 	Name string `json:"name"`
 
 	// PostgresClusterSelector selects clusters to dynamically add to pgAdmin by matching labels

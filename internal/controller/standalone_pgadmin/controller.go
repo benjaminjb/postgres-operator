@@ -82,6 +82,8 @@ func (r *PGAdminReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // SetupWithManager sets up the controller with the Manager.
+// Note the custom function for watching PostgresClusters
+// and queuing pgAdmins related to that PostgresCluster.
 func (r *PGAdminReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.PGAdmin{}).
@@ -119,7 +121,7 @@ func (r *PGAdminReconciler) watchPostgresClusters() handler.Funcs {
 
 //+kubebuilder:rbac:groups="postgres-operator.crunchydata.com",resources="pgpgadmins",verbs={list}
 
-// findPGAdminsForPostgresCluster returns PGAdmins that target cluster.
+// findPGAdminsForPostgresCluster returns PGAdmins that target a given cluster.
 func (r *PGAdminReconciler) findPGAdminsForPostgresCluster(
 	ctx context.Context, cluster client.Object,
 ) []*v1beta1.PGAdmin {
@@ -138,9 +140,7 @@ func (r *PGAdminReconciler) findPGAdminsForPostgresCluster(
 		for i := range pgadmins.Items {
 			for _, serverGroup := range pgadmins.Items[i].Spec.ServerGroups {
 				if selector, err := naming.AsSelector(serverGroup.PostgresClusterSelector); err == nil {
-
 					if selector.Matches(labels.Set(cluster.GetLabels())) {
-
 						matching = append(matching, &pgadmins.Items[i])
 					}
 				}
@@ -154,23 +154,18 @@ func (r *PGAdminReconciler) findPGAdminsForPostgresCluster(
 func (r *PGAdminReconciler) getClustersForPGAdmin(
 	ctx context.Context,
 	pgAdmin *v1beta1.PGAdmin,
-) []*v1beta1.PostgresCluster {
-	var matching []*v1beta1.PostgresCluster
+) map[string]*v1beta1.PostgresClusterList {
+	matching := make(map[string]*v1beta1.PostgresClusterList)
 
 	for _, serverGroup := range pgAdmin.Spec.ServerGroups {
 		if selector, err := naming.AsSelector(serverGroup.PostgresClusterSelector); err == nil {
-
 			var filteredList v1beta1.PostgresClusterList
 			err = r.List(ctx, &filteredList,
 				client.InNamespace(pgAdmin.Namespace),
 				client.MatchingLabelsSelector{Selector: selector},
 			)
-
 			if err == nil {
-
-				for i := range filteredList.Items {
-					matching = append(matching, &filteredList.Items[i])
-				}
+				matching[serverGroup.Name] = &filteredList
 			}
 		}
 	}
@@ -184,7 +179,7 @@ func (r *PGAdminReconciler) getClustersForPGAdmin(
 func (r *PGAdminReconciler) reconcilePGAdminConfigMap(
 	ctx context.Context,
 	pgAdmin *v1beta1.PGAdmin,
-	clusters []*v1beta1.PostgresCluster,
+	clusters map[string]*v1beta1.PostgresClusterList,
 ) error {
 	pgAdminConfigMap := &corev1.ConfigMap{ObjectMeta: naming.StandalonePGAdminClusters(pgAdmin)}
 	pgAdminConfigMap.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ConfigMap"))
@@ -209,7 +204,7 @@ func (r *PGAdminReconciler) reconcilePGAdminConfigMap(
 // clusterConfigMap populates a clusterConfigMap with the configuration needed to run pgAdmin.
 func clusterConfigMap(
 	outConfigMap *corev1.ConfigMap,
-	clusters []*v1beta1.PostgresCluster,
+	clusters map[string]*v1beta1.PostgresClusterList,
 ) error {
 	initialize.StringMap(&outConfigMap.Data)
 
@@ -222,18 +217,22 @@ func clusterConfigMap(
 	encoder.SetEscapeHTML(false)
 	encoder.SetIndent("", "  ")
 	clusterServers := map[int]any{}
-	for i, cluster := range clusters {
-		object := map[string]any{
-			"Name":          cluster.Name,
-			"Group":         "Crunchy PostgreSQL Operator",
-			"Host":          fmt.Sprintf("%s-primary.%s.svc", cluster.Name, cluster.Namespace),
-			"Port":          5432,
-			"MaintenanceDB": "postgres",
-			"Username":      cluster.Name,
-			"SSLMode":       "prefer",
-			"Shared":        true,
+	var max = 0
+	for serverGroupName, clusterList := range clusters {
+		for i, cluster := range clusterList.Items {
+			object := map[string]any{
+				"Name":          cluster.Name,
+				"Group":         serverGroupName,
+				"Host":          fmt.Sprintf("%s-primary.%s.svc", cluster.Name, cluster.Namespace),
+				"Port":          5432,
+				"MaintenanceDB": "postgres",
+				"Username":      cluster.Name,
+				"SSLMode":       "prefer",
+				"Shared":        true,
+			}
+			clusterServers[i+1+max] = object
 		}
-		clusterServers[i+1] = object
+		max = len(clusterList.Items)
 	}
 	jsonWrap := map[string]any{
 		"Servers": clusterServers,
