@@ -1,0 +1,53 @@
+name: MicroShift
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  microshift-runner:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.x
+      
+      - name: Set up podman
+        run: |          
+          sudo apt-get update
+          sudo apt-get -y install podman
+
+      - name: Set up oc client
+        run: |
+          wget https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz
+          sudo tar xzvf oc.tar.gz -C /usr/local/bin
+
+      - name: Run a microshift cluster
+        run: |
+          sudo podman run -d --rm --name microshift \
+               --privileged -v microshift-data:/var/lib -p 6443:6443 \
+               quay.io/microshift/microshift-aio:latest
+          # get kubeconfig
+          sudo podman exec microshift bash -c \
+               'while ! test -f "/var/lib/microshift/resources/kubeadmin/kubeconfig";
+               do
+                   echo "Waiting for kubeconfig..."
+                   sleep 5
+               done'
+          mkdir ${HOME}/.kube
+          sudo podman cp \
+               microshift:/var/lib/microshift/resources/kubeadmin/kubeconfig \
+               ${HOME}/.kube/config
+          sudo chown ${USER} ${HOME}/.kube/config
+          chmod 600 ${HOME}/.kube/config
+          # wait for the cluster to become available
+          sleep 10
+          kubectl wait --for=condition=available apiservice --all --timeout 300s
+          kubectl api-resources
+
+      - run: make check-envtest-existing
