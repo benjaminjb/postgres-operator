@@ -1,0 +1,20 @@
+name: MicroShiftexp
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  microshift-runner-exp:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run a microshift cluster
+        run: |
+          sudo apt-get install -y microshift
+
+          microshift version
